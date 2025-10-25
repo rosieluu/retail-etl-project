@@ -1,0 +1,67 @@
+main:
+  params: [event]
+  steps:
+    - init:
+        assign:
+          - project_id: "${project_id}"
+          - dataset_id: "${dataset_id}"
+          - bucket_name: "${bucket_name}"
+          - message: $${event.data.message.data}
+          - decoded_message: $${base64.decode(message)}
+          - message_json: $${json.decode(decoded_message)}
+          - file_name: $${message_json.name}
+          
+    - check_file_type:
+        switch:
+          - condition: $${text.match_regex(file_name, ".*\\.csv$$")}
+            next: determine_table
+        next: end
+    
+    - determine_table:
+        switch:
+          - condition: $${text.match_regex(file_name, "(?i)invoice")}
+            assign:
+              - table_id: "raw_invoice"
+            next: load_to_bigquery
+          - condition: $${text.match_regex(file_name, "(?i)country")}
+            assign:
+              - table_id: "raw_country"
+            next: load_to_bigquery
+        next: end
+    
+    - load_to_bigquery:
+        call: googleapis.bigquery.v2.jobs.insert
+        args:
+          projectId: $${project_id}
+          body:
+            configuration:
+              load:
+                sourceUris: 
+                  - $${"gs://" + bucket_name + "/" + file_name}
+                destinationTable:
+                  projectId: $${project_id}
+                  datasetId: $${dataset_id}
+                  tableId: $${table_id}
+                sourceFormat: "CSV"
+                skipLeadingRows: 1
+                autodetect: false
+                writeDisposition: "WRITE_APPEND"
+        result: load_result
+    
+    - wait_for_load:
+        call: sys.sleep
+        args:
+          seconds: 5
+    
+    - trigger_dbt:
+        call: http.get
+        args:
+          url: "${cloud_run_url}/run"
+          auth:
+            type: OIDC
+        result: dbt_result
+    
+    - return_result:
+        return: 
+          load_job: $${load_result}
+          dbt_output: $${dbt_result.body}
