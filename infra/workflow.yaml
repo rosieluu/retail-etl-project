@@ -62,6 +62,6 @@ main:
         result: dbt_result
     
     - return_result:
-        return: 
+        return:
           load_job: $${load_result}
           dbt_output: $${dbt_result.body}
