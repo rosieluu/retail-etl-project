@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: retail_dsy
+    database: ext3rncrm
+    schema: retail_dsy
+    tables:
+      - name: raw_invoice
+      - name: raw_country

@@ -1,0 +1,12 @@
+retail_dsy:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: ext3rncrm
+      dataset: retail_dsy
+      threads: 4
+      timeout_seconds: 300
+      location: europe-west1
+      keyfile: /secrets/dbt-service-keyfile
