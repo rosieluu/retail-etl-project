@@ -1,0 +1,33 @@
+'EOF'
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Service Account Keys (IMPORTANT!)
+*.json
+!dbt-etl/profiles.example.yml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+
+# DBT
+dbt-etl/logs/
+dbt-etl/target/
+dbt-etl/dbt_packages/
+EOF
