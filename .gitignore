@@ -1,4 +1,3 @@
-'EOF'
 # Terraform
 *.tfstate
 *.tfstate.*
@@ -30,4 +29,3 @@ venv/
 dbt-etl/logs/
 dbt-etl/target/
 dbt-etl/dbt_packages/
-EOF
