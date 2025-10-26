@@ -52,7 +52,7 @@ main:
         call: sys.sleep
         args:
           seconds: 5
-    
+    #call api in cloud run to trigger dbt job
     - trigger_dbt:
         call: http.get
         args:
