@@ -13,3 +13,4 @@ SELECT
 FROM customer_cte t
 LEFT JOIN {{ source('retail_dsy', 'raw_country') }} cm ON t.country = cm.nicename-- Test CI/CD pipeline
 -- Test CI/CD pipeline
+-- Updated model
