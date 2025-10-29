@@ -11,6 +11,13 @@ resource "google_project_iam_member" "cloudrun_bigquery_admin" {
   member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
 }
 
+# Permissions Secret Manager pour Cloud Run
+resource "google_project_iam_member" "cloudrun_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
+}
+
 # Création du service Cloud Run (placeholder, sera déployé par Cloud Build)
 resource "google_cloud_run_service" "dbt_service" {
   name     = "dbt-service"
