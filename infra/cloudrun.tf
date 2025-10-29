@@ -18,6 +18,7 @@ resource "google_project_iam_member" "cloudrun_secret_accessor" {
   member  = "serviceAccount:${google_service_account.cloudrun_sa.email}"
 }
 
+
 # Création du service Cloud Run (placeholder, sera déployé par Cloud Build)
 resource "google_cloud_run_service" "dbt_service" {
   name     = "dbt-service"
@@ -28,7 +29,7 @@ resource "google_cloud_run_service" "dbt_service" {
       service_account_name = google_service_account.cloudrun_sa.email
 
       containers {
-        image = "gcr.io/cloudrun/hello"  # Image placeholder
+        image = "gcr.io/cloudrun/hello" # Image placeholder
 
         resources {
           limits = {
