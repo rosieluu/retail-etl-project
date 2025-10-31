@@ -1,0 +1,160 @@
+version: 2
+
+models:
+  - name: fct_invoices
+    description: "Table de faits des factures avec les clés étrangères vers les dimensions"
+    columns:
+      - name: invoice_id
+        description: "Identifiant de la facture"
+        tests:
+          - not_null
+      
+      - name: datetime_id
+        description: "Clé étrangère vers la dimension datetime"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_datetime')
+              field: datetime_id
+      
+      - name: product_id
+        description: "Clé étrangère vers la dimension produit"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_id
+      
+      - name: customer_id
+        description: "Clé étrangère vers la dimension client"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_id
+      
+      - name: quantity
+        description: "Quantité vendue"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+      
+      - name: total
+        description: "Montant total de la ligne de facture"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+  - name: dim_customer
+    description: "Dimension des clients"
+    columns:
+      - name: customer_id
+        description: "Clé primaire de la dimension client"
+        tests:
+          - unique
+          - not_null
+      
+      - name: country
+        description: "Pays du client"
+        tests:
+          - not_null
+      
+      - name: iso
+        description: "Code ISO du pays"
+        tests:
+          - accepted_values:
+              values: ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW']
+              quote: false
+
+  - name: dim_product
+    description: "Dimension des produits"
+    columns:
+      - name: product_id
+        description: "Clé primaire de la dimension produit"
+        tests:
+          - unique
+          - not_null
+      
+      - name: stock_code
+        description: "Code stock du produit"
+        tests:
+          - not_null
+      
+      - name: description
+        description: "Description du produit"
+        tests:
+          - not_null
+      
+      - name: price
+        description: "Prix unitaire du produit"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+  - name: dim_datetime
+    description: "Dimension des dates et heures"
+    columns:
+      - name: datetime_id
+        description: "Clé primaire de la dimension datetime"
+        tests:
+          - unique
+          - not_null
+      
+      - name: datetime
+        description: "Date et heure parsées"
+        tests:
+          - not_null
+      
+      - name: year
+        description: "Année"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 2000
+              max_value: 2030
+      
+      - name: month
+        description: "Mois"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+      
+      - name: day
+        description: "Jour"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 31
+      
+      - name: hour
+        description: "Heure"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+      
+      - name: minute
+        description: "Minute"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 59
+      
+      - name: weekday
+        description: "Jour de la semaine"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 7
