@@ -22,3 +22,9 @@ models:
       +materialized: view
     transform:
       +materialized: table
+
+snapshots:
+  retail_dsy:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: updated_at
