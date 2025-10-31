@@ -2,7 +2,17 @@ version: 2
 
 models:
   - name: fct_invoices
-    description: "Table de faits des factures avec les clés étrangères vers les dimensions"
+    description: |
+      **Table de faits centrale du projet retail ETL.**
+      
+      Contient les données transactionnelles des ventes avec les clés étrangères 
+      vers les dimensions. Cette table est optimisée pour les analyses de vente, 
+      le reporting financier et les métriques de performance.
+      
+      **Granularité** : Une ligne par item de facture
+      **Source** : raw_invoice (après transformation et jointures)
+      **Fréquence** : Mise à jour quotidienne
+      **Volume estimé** : ~500K lignes/mois
     columns:
       - name: invoice_id
         description: "Identifiant de la facture"
@@ -50,7 +60,17 @@ models:
               inclusive: false
 
   - name: dim_customer
-    description: "Dimension des clients"
+    description: |
+      **Dimension des clients** contenant les informations uniques par client et pays.
+      
+      Cette table de dimension regroupe les clients par combinaison unique de 
+      CustomerID et Country, permettant l'analyse géographique des ventes.
+      La jointure avec raw_country enrichit les données avec les codes ISO.
+      
+      **Granularité** : Un enregistrement par combinaison CustomerID + Country
+      **Clé primaire** : customer_id (surrogate key générée)
+      **Sources** : raw_invoice, raw_country
+      **Type SCD** : SCD Type 1 (écrasement)
     columns:
       - name: customer_id
         description: "Clé primaire de la dimension client"
@@ -71,7 +91,18 @@ models:
               quote: false
 
   - name: dim_product
-    description: "Dimension des produits"
+    description: |
+      **Dimension des produits** avec gestion des variations de prix.
+      
+      Contrairement à une dimension produit classique, cette table capture 
+      les variations de prix en créant un enregistrement unique par combinaison 
+      StockCode + Description + UnitPrice. Cela permet de tracker l'historique 
+      des prix et les promotions.
+      
+      **Granularité** : Un enregistrement par StockCode + Description + Prix
+      **Clé primaire** : product_id (surrogate key générée)
+      **Source** : raw_invoice (distinct values)
+      **Particularité** : Gère les variations de prix dans le temps
     columns:
       - name: product_id
         description: "Clé primaire de la dimension produit"
@@ -98,7 +129,18 @@ models:
               inclusive: false
 
   - name: dim_datetime
-    description: "Dimension des dates et heures"
+    description: |
+      **Dimension temporelle** avec parsing intelligent des formats de date.
+      
+      Cette table transforme les chaînes de date variables du système source 
+      en structure temporelle normalisée. Gère deux formats principaux :
+      - "DD/MM/YYYY HH:MM" (16 caractères)
+      - "MM/DD/YY HH:MM" (≤14 caractères)
+      
+      **Granularité** : Un enregistrement par datetime unique
+      **Clé primaire** : datetime_id (datetime original en string)
+      **Source** : raw_invoice.InvoiceDate
+      **Utilisation** : Analyses temporelles, reporting périodique
     columns:
       - name: datetime_id
         description: "Clé primaire de la dimension datetime"

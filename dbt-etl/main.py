@@ -124,6 +124,62 @@ def run_full_pipeline():
         raise HTTPException(status_code=500, detail=error_message)
 
 
+@app.get("/docs")
+def generate_dbt_docs():
+    """Generate dbt documentation."""
+    logger.info("Generating dbt docs")
+
+    # Run dbt docs generate command
+    result = subprocess.run(["dbt", "docs", "generate"], capture_output=True, text=True)
+
+    if result.returncode == 0:
+        logger.info("dbt docs generate succeeded")
+        logger.info("dbt docs output: " + result.stdout)
+        return {
+            "message": "Documentation generated successfully",
+            "output": result.stdout,
+            "error": result.stderr,
+            "docs_path": "target/index.html"
+        }
+    else:
+        error_message = f"dbt docs generate failed: {result.stderr} stdout: {result.stdout}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+@app.get("/docs/serve")
+def serve_dbt_docs():
+    """Start dbt docs server (background process)."""
+    logger.info("Starting dbt docs serve")
+
+    # Start dbt docs serve in background
+    try:
+        import threading
+        import time
+        
+        def run_docs_serve():
+            subprocess.run(["dbt", "docs", "serve", "--port", "8080"], 
+                         capture_output=False, text=True)
+        
+        # Start in background thread
+        docs_thread = threading.Thread(target=run_docs_serve, daemon=True)
+        docs_thread.start()
+        
+        # Give it a moment to start
+        time.sleep(2)
+        
+        return {
+            "message": "Documentation server started",
+            "url": "http://localhost:8080",
+            "note": "Server running in background. Access the documentation at the provided URL."
+        }
+        
+    except Exception as e:
+        error_message = f"Failed to start docs server: {str(e)}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+
+
 # @app.post("/run-dbt")
 # async def run_dbt_command(command: str):
 #     """

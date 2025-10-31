@@ -1,3 +1,63 @@
+# Retail ETL Project - dbt Documentation
+
+## 📊 Vue d'ensemble du projet
+
+Ce projet dbt transforme les données brutes de vente retail en modèle dimensionnel optimisé pour l'analyse et le reporting. L'architecture suit les bonnes pratiques de modélisation en étoile avec séparation staging/transform.
+
+## 🏗️ Architecture des données
+
+```
+Sources (BigQuery)
+    ↓
+[Staging Layer] (Views)
+    ↓
+[Transform Layer] (Tables)
+    ├── dim_customer (Dimension clients)
+    ├── dim_product (Dimension produits)
+    ├── dim_datetime (Dimension temporelle)
+    └── fct_invoices (Faits de vente)
+    ↓
+[Snapshots] (Historique SCD Type 2)
+    ├── snap_dim_customer
+    ├── snap_dim_product
+    └── snap_raw_invoice
+```
+
+## 📋 Modèles disponibles
+
+### 🎯 Tables de faits
+- **`fct_invoices`** : Transactions de vente avec métriques calculées
+
+### 📐 Tables de dimensions
+- **`dim_customer`** : Clients uniques par pays avec codes ISO
+- **`dim_product`** : Produits avec gestion des variations de prix
+- **`dim_datetime`** : Dimension temporelle avec composants date/heure
+
+### 📸 Snapshots (SCD Type 2)
+- **`snap_dim_customer`** : Historique des changements clients
+- **`snap_dim_product`** : Historique des changements produits
+- **`snap_raw_invoice`** : Historique des données sources
+
+## 🚀 API FastAPI - Endpoints disponibles
+
+| Endpoint | Description | Commande équivalente |
+|----------|-------------|---------------------|
+| `GET /run` | Exécuter les modèles | `dbt run` |
+| `GET /test` | Lancer les tests | `dbt test` |
+| `GET /snapshot` | Capturer les snapshots | `dbt snapshot` |
+| `GET /full-pipeline` | Pipeline complet | `dbt run && dbt snapshot && dbt test` |
+| `GET /docs/generate` | Générer documentation | `dbt docs generate` |
+| `GET /docs/serve` | Servir documentation | `dbt docs serve` |
+
+### Démarrage de l'API
+```bash
+cd dbt-etl
+python main.py
+# API disponible sur http://localhost:8000
+```
+
+---
+
 # Tests de Granularité DBT
 
 ## Vue d'ensemble

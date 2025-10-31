@@ -2,8 +2,78 @@ version: 2
 
 sources:
   - name: retail_dsy
+    description: |
+      **Source de données retail principale** contenant les données brutes 
+      du système de vente et les tables de référence géographiques.
+      
+      Base de données BigQuery hébergeant les exports quotidiens du système 
+      transactionnel. Les données sont chargées via Cloud Storage avec 
+      validation de schéma.
     database: ext3rncrm
     schema: retail_dsy
     tables:
       - name: raw_invoice
+        description: |
+          **Table des factures brutes** importée quotidiennement depuis le système transactionnel.
+          
+          Contient une ligne par item de facture avec les détails produit, client, 
+          quantité et prix. Source principale pour toutes les analyses de vente.
+          
+          **Volume** : ~500K nouveaux enregistrements/mois
+          **Fréquence** : Import quotidien à 02:00 UTC
+          **Format** : CSV via Cloud Storage
+          **Qualité** : Validation automatique sur InvoiceNo, StockCode
+        columns:
+          - name: InvoiceNo
+            description: |
+              Numéro unique de facture. Format : C######
+              Les factures annulées commencent par 'C'
+            tests:
+              - not_null
+          - name: StockCode
+            description: |
+              Code produit unique dans le système.
+              Peut contenir des caractères alphanumériques
+          - name: Description
+            description: |
+              Description textuelle du produit.
+              Peut être NULL pour certains codes système
+          - name: Quantity
+            description: |
+              Quantité commandée. Peut être négative pour les retours
+          - name: InvoiceDate
+            description: |
+              Date et heure de la facture au format string.
+              Formats variables : "DD/MM/YYYY HH:MM" ou "MM/DD/YY HH:MM"
+          - name: UnitPrice
+            description: |
+              Prix unitaire en devise locale (GBP).
+              Peut être 0 pour les échantillons gratuits
+          - name: CustomerID
+            description: |
+              Identifiant numérique du client.
+              NULL pour les ventes sans compte client
+          - name: Country
+            description: |
+              Nom du pays de livraison.
+              Texte libre, nécessite normalisation
+      
       - name: raw_country
+        description: |
+          **Table de référence géographique** pour normaliser les noms de pays.
+          
+          Mappage entre noms de pays (en anglais) et codes ISO 3166-1 alpha-2.
+          Utilisée pour enrichir dim_customer avec des codes pays standardisés.
+          
+          **Source** : Référentiel géographique standard
+          **Maintenance** : Mise à jour manuelle selon besoins
+          **Usage** : Jointure avec raw_invoice.Country
+        columns:
+          - name: nicename
+            description: |
+              Nom du pays en anglais (format affiché).
+              Correspond aux valeurs dans raw_invoice.Country
+          - name: iso
+            description: |
+              Code pays ISO 3166-1 alpha-2 (2 lettres).
+              Standard international pour l'identification des pays
