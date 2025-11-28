@@ -101,3 +101,66 @@ tests:
       severity: warn
       tags: ['data_quality', 'mon_tag']
 ```
+
+
+# 📊 Data Quality Monitor
+
+Table simple de monitoring de la qualité des données.
+
+## 🎯 Objectif
+
+Consolider tous les problèmes de qualité détectés dans une seule table.
+
+## 📋 Structure
+
+| Colonne | Description |
+|---------|-------------|
+| `table_name` | Table source (dim_product, fct_invoices, etc.) |
+| `issue_type` | Type de problème (low_price, missing_description, etc.) |
+| `record_id` | ID de l'enregistrement concerné |
+| `details` | Informations détaillées |
+| `checked_at` | Timestamp de la vérification |
+
+## 🔍 Problèmes détectés
+
+- **low_price** : Produits avec prix < 0.10
+- **missing_description** : Produits sans description
+- **missing_iso** : Clients sans code ISO pays
+- **future_date** : Dates dans le futur
+- **high_quantity** : Quantités > 1000
+- **high_total** : Montants > 10000
+
+## 🚀 Utilisation
+
+```bash
+# Construire la table
+dbt run --select data_quality_monitor
+
+# Tester la table
+dbt test --select data_quality_monitor
+```
+
+## 📊 Requêtes utiles
+
+```sql
+-- Voir tous les problèmes
+SELECT * FROM data_quality_monitor
+ORDER BY checked_at DESC;
+
+-- Compter par type
+SELECT table_name, issue_type, COUNT(*) as nb
+FROM data_quality_monitor
+GROUP BY table_name, issue_type
+ORDER BY nb DESC;
+
+-- Problèmes récents
+SELECT * FROM data_quality_monitor
+WHERE DATE(checked_at) = CURRENT_DATE();
+```
+
+## ⚙️ Configuration
+
+Pour modifier les seuils, éditez `data_quality_monitor.sql` :
+- Prix bas : ligne `WHERE price < 0.10`
+- Quantité élevée : ligne `WHERE quantity > 1000`
+- Montant élevé : ligne `WHERE total > 10000`
