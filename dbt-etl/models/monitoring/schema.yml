@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: data_quality_monitor
+    description: "Table de monitoring simple consolidant tous les problèmes de qualité détectés"
+    
+    columns:
+      - name: table_name
+        description: "Nom de la table source"
+        tests:
+          - not_null
+      
+      - name: issue_type
+        description: "Type de problème détecté"
+        tests:
+          - not_null
+      
+      - name: record_id
+        description: "Identifiant de l'enregistrement concerné"
+        tests:
+          - not_null
+      
+      - name: details
+        description: "Détails du problème"
+      
+      - name: checked_at
+        description: "Date et heure de la vérification"
+        tests:
+          - not_null

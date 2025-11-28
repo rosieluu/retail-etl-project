@@ -22,3 +22,12 @@ models:
       +materialized: view
     transform:
       +materialized: table
+    monitoring:
+      +materialized: table
+
+# Configuration des tests
+tests:
+  retail_dsy:
+    # Tests de qualité en mode WARNING par défaut
+    +severity: warn
+    +tags: ['data_quality']
