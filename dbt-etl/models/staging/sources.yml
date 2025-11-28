@@ -6,4 +6,12 @@ sources:
     schema: retail_dsy
     tables:
       - name: raw_invoice
+        columns:
+          - name: InvoiceNo
+            tests:
+              - not_null
       - name: raw_country
+        columns:
+          - name: CountryCode
+            tests:
+              - not_null

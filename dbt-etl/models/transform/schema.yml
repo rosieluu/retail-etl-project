@@ -1,0 +1,332 @@
+version: 2version: 2
+
+
+
+models:models:
+
+  # ====================  - name: fct_invoices
+
+  # DIMENSIONS    description: |
+
+  # ====================      **Table de faits centrale du projet retail ETL.**
+
+        
+
+  - name: dim_customer      Contient les données transactionnelles des ventes avec les clés étrangères 
+
+    description: "Table de dimension des clients - contient les informations uniques par client et pays"      vers les dimensions. Cette table est optimisée pour les analyses de vente, 
+
+    columns:      le reporting financier et les métriques de performance.
+
+      - name: customer_id      
+
+        description: "Clé surrogate générée à partir de CustomerID et Country"      **Granularité** : Une ligne par item de facture
+
+        tests:      **Source** : raw_invoice (après transformation et jointures)
+
+          - unique      **Fréquence** : Mise à jour quotidienne
+
+          - not_null      **Volume estimé** : ~500K lignes/mois
+
+          columns:
+
+      - name: country      - name: invoice_id
+
+        description: "Nom du pays du client"        description: "Identifiant de la facture"
+
+        tests:        tests:
+
+          - not_null          - not_null
+
+            
+
+      - name: iso      - name: datetime_id
+
+        description: "Code ISO2 du pays (jointure avec raw_country)"        description: "Clé étrangère vers la dimension datetime"
+
+        tests:
+
+  - name: dim_product          - not_null
+
+    description: "Table de dimension des produits - un produit peut avoir différents prix"          - relationships:
+
+    columns:              to: ref('dim_datetime')
+
+      - name: product_id              field: datetime_id
+
+        description: "Clé surrogate générée à partir de StockCode, Description et UnitPrice"      
+
+        tests:      - name: product_id
+
+          - unique        description: "Clé étrangère vers la dimension produit"
+
+          - not_null        tests:
+
+                - not_null
+
+      - name: stock_code          - relationships:
+
+        description: "Code article du produit"              to: ref('dim_product')
+
+        tests:              field: product_id
+
+          - not_null      
+
+            - name: customer_id
+
+      - name: description        description: "Clé étrangère vers la dimension client"
+
+        description: "Description du produit"        tests:
+
+                - not_null
+
+      - name: price          - relationships:
+
+        description: "Prix unitaire du produit (> 0)"              to: ref('dim_customer')
+
+        tests:              field: customer_id
+
+          - not_null      
+
+      - name: quantity
+
+  - name: dim_datetime        description: "Quantité vendue"
+
+    description: "Table de dimension temporelle - décompose les dates et heures des factures"        tests:
+
+    columns:          - not_null
+
+      - name: datetime_id          - dbt_utils.accepted_range:
+
+        description: "Identifiant de date/heure (format texte original)"              min_value: 0
+
+        tests:              inclusive: false
+
+          - unique      
+
+          - not_null      - name: total
+
+              description: "Montant total de la ligne de facture"
+
+      - name: datetime        tests:
+
+        description: "Date et heure parsée au format DATETIME"          - not_null
+
+        tests:          - dbt_utils.accepted_range:
+
+          - not_null              min_value: 0
+
+                    inclusive: false
+
+      - name: year
+
+        description: "Année extraite"  - name: dim_customer
+
+          description: |
+
+      - name: month      **Dimension des clients** contenant les informations uniques par client et pays.
+
+        description: "Mois extrait (1-12)"      
+
+            Cette table de dimension regroupe les clients par combinaison unique de 
+
+      - name: day      CustomerID et Country, permettant l'analyse géographique des ventes.
+
+        description: "Jour du mois extrait (1-31)"      La jointure avec raw_country enrichit les données avec les codes ISO.
+
+            
+
+      - name: hour      **Granularité** : Un enregistrement par combinaison CustomerID + Country
+
+        description: "Heure extraite (0-23)"      **Clé primaire** : customer_id (surrogate key générée)
+
+            **Sources** : raw_invoice, raw_country
+
+      - name: minute      **Type SCD** : SCD Type 1 (écrasement)
+
+        description: "Minute extraite (0-59)"    columns:
+
+            - name: customer_id
+
+      - name: weekday        description: "Clé primaire de la dimension client"
+
+        description: "Jour de la semaine (1=Dimanche, 7=Samedi)"        tests:
+
+          - unique
+
+  # ====================          - not_null
+
+  # FACT TABLE      
+
+  # ====================      - name: country
+
+          description: "Pays du client"
+
+  - name: fct_invoices        # tests:
+
+    description: "Table de faits des factures - contient les transactions avec références aux dimensions"        #   - not_null
+
+          
+
+    tests:      - name: iso
+
+      - dbt_utils.expression_is_true:        description: "Code ISO du pays"
+
+          expression: "quantity > 0"        tests:
+
+      - dbt_utils.expression_is_true:          - accepted_values:
+
+          expression: "total > 0"              values: ['AD', 'AE', 'AF', 'AG', 'AI', 'AL', 'AM', 'AO', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AW', 'AX', 'AZ', 'BA', 'BB', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BL', 'BM', 'BN', 'BO', 'BQ', 'BR', 'BS', 'BT', 'BV', 'BW', 'BY', 'BZ', 'CA', 'CC', 'CD', 'CF', 'CG', 'CH', 'CI', 'CK', 'CL', 'CM', 'CN', 'CO', 'CR', 'CU', 'CV', 'CW', 'CX', 'CY', 'CZ', 'DE', 'DJ', 'DK', 'DM', 'DO', 'DZ', 'EC', 'EE', 'EG', 'EH', 'ER', 'ES', 'ET', 'FI', 'FJ', 'FK', 'FM', 'FO', 'FR', 'GA', 'GB', 'GD', 'GE', 'GF', 'GG', 'GH', 'GI', 'GL', 'GM', 'GN', 'GP', 'GQ', 'GR', 'GS', 'GT', 'GU', 'GW', 'GY', 'HK', 'HM', 'HN', 'HR', 'HT', 'HU', 'ID', 'IE', 'IL', 'IM', 'IN', 'IO', 'IQ', 'IR', 'IS', 'IT', 'JE', 'JM', 'JO', 'JP', 'KE', 'KG', 'KH', 'KI', 'KM', 'KN', 'KP', 'KR', 'KW', 'KY', 'KZ', 'LA', 'LB', 'LC', 'LI', 'LK', 'LR', 'LS', 'LT', 'LU', 'LV', 'LY', 'MA', 'MC', 'MD', 'ME', 'MF', 'MG', 'MH', 'MK', 'ML', 'MM', 'MN', 'MO', 'MP', 'MQ', 'MR', 'MS', 'MT', 'MU', 'MV', 'MW', 'MX', 'MY', 'MZ', 'NA', 'NC', 'NE', 'NF', 'NG', 'NI', 'NL', 'NO', 'NP', 'NR', 'NU', 'NZ', 'OM', 'PA', 'PE', 'PF', 'PG', 'PH', 'PK', 'PL', 'PM', 'PN', 'PR', 'PS', 'PT', 'PW', 'PY', 'QA', 'RE', 'RO', 'RS', 'RU', 'RW', 'SA', 'SB', 'SC', 'SD', 'SE', 'SG', 'SH', 'SI', 'SJ', 'SK', 'SL', 'SM', 'SN', 'SO', 'SR', 'SS', 'ST', 'SV', 'SX', 'SY', 'SZ', 'TC', 'TD', 'TF', 'TG', 'TH', 'TJ', 'TK', 'TL', 'TM', 'TN', 'TO', 'TR', 'TT', 'TV', 'TW', 'TZ', 'UA', 'UG', 'UM', 'US', 'UY', 'UZ', 'VA', 'VC', 'VE', 'VG', 'VI', 'VN', 'VU', 'WF', 'WS', 'YE', 'YT', 'ZA', 'ZM', 'ZW']
+
+                  quote: false
+
+    columns:
+
+      - name: invoice_id  - name: dim_product
+
+        description: "Numéro de facture"    description: |
+
+        tests:      **Dimension des produits** avec gestion des variations de prix.
+
+          - not_null      
+
+            Contrairement à une dimension produit classique, cette table capture 
+
+      - name: datetime_id      les variations de prix en créant un enregistrement unique par combinaison 
+
+        description: "Clé étrangère vers dim_datetime"      StockCode + Description + UnitPrice. Cela permet de tracker l'historique 
+
+        tests:      des prix et les promotions.
+
+          - not_null      
+
+          - relationships:      **Granularité** : Un enregistrement par StockCode + Description + Prix
+
+              to: ref('dim_datetime')      **Clé primaire** : product_id (surrogate key générée)
+
+              field: datetime_id      **Source** : raw_invoice (distinct values)
+
+            **Particularité** : Gère les variations de prix dans le temps
+
+      - name: product_id    columns:
+
+        description: "Clé étrangère vers dim_product"      - name: product_id
+
+        tests:        description: "Clé primaire de la dimension produit"
+
+          - not_null        tests:
+
+          - relationships:          - unique
+
+              to: ref('dim_product')          - not_null
+
+              field: product_id      
+
+            - name: stock_code
+
+      - name: customer_id        description: "Code stock du produit"
+
+        description: "Clé étrangère vers dim_customer"        tests:
+
+        tests:          - not_null
+
+          - not_null      
+
+          - relationships:      - name: description
+
+              to: ref('dim_customer')        description: "Description du produit"
+
+              field: customer_id        tests:
+
+                - not_null
+
+      - name: quantity      
+
+        description: "Quantité de produits achetés (> 0)"      - name: price
+
+        tests:        description: "Prix unitaire du produit"
+
+          - not_null        tests:
+
+                - not_null
+
+      - name: total          - dbt_utils.accepted_range:
+
+        description: "Montant total de la ligne (quantity * price)"              min_value: 0
+
+        tests:              inclusive: false
+
+          - not_null
+
+  - name: dim_datetime
+    description: |
+      **Dimension temporelle** avec parsing intelligent des formats de date.
+      
+      Cette table transforme les chaînes de date variables du système source 
+      en structure temporelle normalisée. Gère deux formats principaux :
+      - "DD/MM/YYYY HH:MM" (16 caractères)
+      - "MM/DD/YY HH:MM" (≤14 caractères)
+      
+      **Granularité** : Un enregistrement par datetime unique
+      **Clé primaire** : datetime_id (datetime original en string)
+      **Source** : raw_invoice.InvoiceDate
+      **Utilisation** : Analyses temporelles, reporting périodique
+    columns:
+      - name: datetime_id
+        description: "Clé primaire de la dimension datetime"
+        tests:
+          - unique
+          - not_null
+      
+      - name: datetime
+        description: "Date et heure parsées"
+        tests:
+          - not_null
+      
+      - name: year
+        description: "Année"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 2000
+              max_value: 2030
+      
+      - name: month
+        description: "Mois"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 12
+      
+      - name: day
+        description: "Jour"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 31
+      
+      - name: hour
+        description: "Heure"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+      
+      - name: minute
+        description: "Minute"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 59
+      
+      - name: weekday
+        description: "Jour de la semaine"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 7
