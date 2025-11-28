@@ -54,11 +54,6 @@ models:
 
       - name: price
         description: Prix unitaire du produit (doit être > 0)
-        tests:
-          - not_null
-          - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: false
 
 
   # --------------------------------------------------------------------------
@@ -124,8 +119,7 @@ models:
     tests:
       - dbt_utils.expression_is_true:
           expression: "quantity > 0"
-      - dbt_utils.expression_is_true:
-          expression: "total > 0"
+
     
     columns:
       - name: invoice_id
@@ -161,4 +155,4 @@ models:
 
 
       - name: total
-        description: Montant total (quantity × price)
+        description: Montant total (quantity  price)

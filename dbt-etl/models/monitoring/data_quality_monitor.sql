@@ -1,4 +1,4 @@
-/* -- data_quality_monitor.sql
+-- data_quality_monitor.sql
 -- Table simple de monitoring consolidant tous les problèmes de qualité
 
 {{ config(
@@ -70,4 +70,3 @@ SELECT
     CURRENT_TIMESTAMP()
 FROM {{ ref('fct_invoices') }}
 WHERE total > 10000
- */

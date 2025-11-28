@@ -4,6 +4,7 @@ retail_dsy:
     dev:
       type: bigquery
       method: service-account
+      #method: oauth
       project: ext3rncrm
       dataset: retail_dsy
       threads: 4

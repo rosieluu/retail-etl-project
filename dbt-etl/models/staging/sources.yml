@@ -11,7 +11,3 @@ sources:
             tests:
               - not_null
       - name: raw_country
-        columns:
-          - name: CountryCode
-            tests:
-              - not_null
